@@ -41,6 +41,27 @@ contract AirplaneNftTest is Test {
         airplaneNft.mintNFTWithAce();
     }
 
+    function testCannotMintwithInsufficientAceAllocation() public {
+        //arrange/act
+        vm.prank(bob);
+        aceToken.approve(address(airplaneNft), 200 * 1e18);
+        vm.expectRevert();
+        vm.prank(bob);
+        airplaneNft.mintNFTWithAce();
+    }
+
+    function testMustReApproveAfterSpending() public {
+        //arrange/act
+        vm.prank(bob);
+        aceToken.approve(address(airplaneNft), PRICE);
+        vm.prank(bob);
+        airplaneNft.mintNFTWithAce();
+
+        vm.expectRevert();
+        vm.prank(bob);
+        airplaneNft.mintNFTWithAce();
+    }
+
     function testCanMintwithAce() public {
         //arrange/act
         uint256 startingOwnerBalance = aceToken.balanceOf(
@@ -86,6 +107,19 @@ contract AirplaneNftTest is Test {
         //act
         airplaneNft.mintNFTWithEth{value: 0}();
         //assert
+    }
+
+    function testNftCanBeTransferred() public {
+        //arrange
+        vm.prank(bob);
+        airplaneNft.mintNFTWithEth{value: SEND_VALUE}();
+
+        //act
+        vm.prank(bob);
+        airplaneNft.transferFrom(bob, alice, 0);
+
+        //assert
+        assertEq(airplaneNft.ownerOf(0), alice);
     }
 
     function testTokenCounterIncrements() public {
